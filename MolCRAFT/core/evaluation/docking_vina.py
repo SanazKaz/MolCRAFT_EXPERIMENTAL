@@ -1,12 +1,25 @@
-from openbabel import pybel
-from meeko import MoleculePreparation
-from meeko import obutils
-from vina import Vina
+try:
+    from openbabel import pybel
+except ImportError:
+    pybel = None
+try:
+    from meeko import MoleculePreparation
+    from meeko import obutils
+except ImportError:
+    MoleculePreparation = None
+    obutils = None
+try:
+    from vina import Vina
+except ImportError:
+    Vina = None
 import subprocess
 import rdkit.Chem as Chem
 from rdkit.Chem import AllChem
 import tempfile
-import AutoDockTools
+try:
+    import AutoDockTools
+except ImportError:
+    AutoDockTools = None
 import os
 import contextlib
 import numpy as np
@@ -74,6 +87,8 @@ class PrepProt(object):
 
     def get_pdbqt(self, prot_pdbqt):
         if not os.path.exists(prot_pdbqt):
+            if AutoDockTools is None:
+                raise ImportError("AutoDockTools is required for receptor preparation. Install MGLTools.")
             prepare_receptor = os.path.join(AutoDockTools.__path__[0], 'Utilities24/prepare_receptor4.py')
             subprocess.Popen(['python3', prepare_receptor, '-r', self.prot_pqr, '-o', prot_pdbqt],
                             stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL).communicate()
