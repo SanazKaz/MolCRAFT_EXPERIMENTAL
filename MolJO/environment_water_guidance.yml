@@ -1,0 +1,78 @@
+name: moljo-water-guidance
+channels:
+  - pyg
+  - conda-forge
+  - rdkit
+  - pytorch
+  - defaults
+
+dependencies:
+  # ── Python ────────────────────────────────────────────────────────────────
+  - python=3.9
+
+  # ── CUDA / PyTorch ────────────────────────────────────────────────────────
+  - cudatoolkit=11.6.0
+  - pytorch=1.12.0=py3.9_cuda11.6_cudnn8.3.2_0
+  - pytorch-mutex=1.0=cuda
+  - torchaudio=0.12.0=py39_cu116
+  - torchvision=0.2.2
+
+  # ── PyTorch Geometric stack ───────────────────────────────────────────────
+  - pyg=2.1.0=py39_torch_1.12.0_cu116
+  - pytorch-scatter=2.0.9=py39_torch_1.12.0_cu116   # used in our guidance code
+  - pytorch-cluster=1.6.0=py39_torch_1.12.0_cu116
+  - pytorch-sparse=0.6.15=py39_torch_1.12.0_cu116
+
+  # ── Chemistry / Biology ───────────────────────────────────────────────────
+  - rdkit=2022.03.5
+  - biopython=1.78
+  - mdtraj=1.9.7
+
+  # ── Scientific stack ─────────────────────────────────────────────────────
+  - numpy=1.23.1
+  - scipy=1.9.3
+  - pandas=1.4.3
+  - scikit-learn=1.1.1
+  - matplotlib-base=3.4.3
+  - networkx=2.8.4
+
+  # ── ML / Training ─────────────────────────────────────────────────────────
+  - mkl=2022.0.1
+
+  # ── Utilities ─────────────────────────────────────────────────────────────
+  - tqdm
+  - pyyaml
+  - easydict
+  - requests
+  - tabulate
+  - yacs
+  - spyrmsd
+
+  # ── Jupyter (optional, for exploration) ───────────────────────────────────
+  - jupyter
+  - ipykernel
+  - nglview
+
+  # ── pip-only packages ─────────────────────────────────────────────────────
+  - pip
+  - pip:
+    # MolJO core
+    - pytorch-lightning==2.0.8
+    - torchmetrics==0.11.0
+    - tensorboardx==2.5.1
+    - einops==0.6.0
+    - easydict==1.10
+    - lightning-utilities==0.11.6
+
+    # ── New: water-guidance dependencies ──────────────────────────────────
+    # ProLIF: protein-ligand interaction fingerprints
+    - prolif>=2.0.0
+
+    # MDAnalysis: required by ProLIF for loading PDB/trajectory files
+    - MDAnalysis>=2.4.0
+
+    # AutoDock Vina Python API: for scoring generated molecules
+    - vina>=1.2.3
+
+    # meeko: ligand preparation for Vina (converts RDKit mol → PDBQT)
+    - meeko>=0.4.0
