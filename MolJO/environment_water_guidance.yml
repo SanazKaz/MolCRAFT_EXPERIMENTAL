@@ -68,4 +68,4 @@ dependencies:
     - prolif
     - MDAnalysis
     - vina
-    - meeko
+    - meeko==0.3.3   # 0.4.0 imports rdkit.six which was removed from modern RDKit
