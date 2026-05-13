@@ -1,71 +1,92 @@
-name: moljo-water-guidance
+name: molcraft-water
+# Clean environment for MolCRAFT baseline + water/zinc-guided sampling.
+#
+# Key design decisions:
+#   1. NO pytorch/pyg/nvidia conda channels — all torch packages come from pip
+#      to guarantee a single consistent torch install with no conda/pip shadowing.
+#   2. numpy pinned to 1.26.x — conda-built pandas/scipy are compiled against
+#      numpy 1.x ABI; numpy 2.x breaks them at import.
+#   3. meeko==0.3.3 — 0.4+ imports rdkit.six which was removed from modern RDKit.
+#   4. PyG cu124 wheels work fine on a cu126 runtime (CUDA backward compat);
+#      they must match the torch *major* version (pt26 here).
+#
+# Usage:
+#   mamba env create -f MolJO/environment_water_guidance.yml
+#   conda activate molcraft-water
+
 channels:
   - conda-forge
-  - pytorch
-  - rdkit
   - defaults
 
 dependencies:
   - python=3.9
 
-  # PyTorch — pick the cudatoolkit that matches your driver
-  - pytorch::pytorch
-  - pytorch::pytorch-mutex=1.0=cuda
-  - pytorch::torchaudio
-  - pytorch::torchvision
-  - cudatoolkit
-
-  # Chemistry
-  - rdkit
-  - biopython
-  - mdtraj
-
-  # Scientific stack
-  - numpy
+  # --- Scientific stack (conda-forge — stable C-level ABIs) ---
+  - numpy=1.26.*       # pinned: pandas/scipy/rdkit C-exts built against 1.x
   - scipy
   - pandas
   - scikit-learn
   - matplotlib-base
   - networkx
 
-  # Utilities
+  # --- Chemistry ---
+  - rdkit
+  - biopython
+  - mdtraj
+  - openbabel
+  - spyrmsd
+
+  # --- Utilities ---
   - tqdm
   - pyyaml
   - requests
   - tabulate
   - yacs
-  - spyrmsd
+  - lark
 
-  # Jupyter
+  # --- Jupyter ---
   - jupyter
   - ipykernel
   - nglview
 
   - pip
   - pip:
-    # PyG — installed via pip so the wheel matches the installed torch version exactly
-    # mamba/conda installs the wrong ABI if done via the pyg channel
-    - torch-scatter
-    - torch-sparse
-    - torch-cluster
-    - torch-geometric
-    # Note: after env creation run this to get the right wheels:
-    #   TORCH=$(python -c "import torch; print(torch.__version__)")
-    #   CUDA=$(python -c "import torch; v=torch.version.cuda; print('cu'+''.join(v.split('.')))")
-    #   pip install torch-scatter torch-sparse torch-cluster torch-geometric \
-    #       -f https://data.pyg.org/whl/torch-${TORCH}+${CUDA}.html
+    # ----------------------------------------------------------------
+    # PyTorch 2.6.0 + CUDA 12.6
+    # --extra-index-url lets pip find the +cu126 local-version packages
+    # (PyPI only has the CPU builds; the +cu126 tag forces the right one).
+    # ----------------------------------------------------------------
+    - --extra-index-url https://download.pytorch.org/whl/cu126
+    - torch==2.6.0+cu126
+    - torchaudio==2.6.0+cu126
+    - torchvision==0.21.0+cu126
 
-    # MolJO core
-    - lmdb
-    - pytorch-lightning
+    # ----------------------------------------------------------------
+    # PyG — cu124 wheels compiled for torch 2.6 (pt26).
+    # cu124 .so files link correctly against a cu126 PyTorch runtime.
+    # ----------------------------------------------------------------
+    - --find-links https://data.pyg.org/whl/torch-2.6.0+cu124.html
+    - torch-scatter==2.1.2+pt26cu124
+    - torch-sparse==0.6.18+pt26cu124
+    - torch-cluster==1.6.3+pt26cu124
+    - torch-geometric==2.6.1
+
+    # ----------------------------------------------------------------
+    # Training / Lightning stack
+    # ----------------------------------------------------------------
+    - pytorch-lightning>=2.0,<3.0
     - torchmetrics
+    - lightning-utilities
     - tensorboardx
     - einops
     - easydict
-    - lightning-utilities
+    - lmdb
 
-    # Water-guidance extras
+    # ----------------------------------------------------------------
+    # Docking + pose evaluation
+    # ----------------------------------------------------------------
+    - vina
+    - meeko==0.3.3
+    - posecheck
     - prolif
     - MDAnalysis
-    - vina
-    - meeko==0.3.3   # 0.4.0 imports rdkit.six which was removed from modern RDKit
