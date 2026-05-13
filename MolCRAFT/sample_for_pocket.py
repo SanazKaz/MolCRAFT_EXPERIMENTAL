@@ -2,9 +2,14 @@
 import os
 import sys
 import json
+import functools
 # import shutil
 
-# import torch
+import torch
+# PyTorch 2.6 changed weights_only default to True, which breaks Lightning's
+# checkpoint loader for checkpoints saved with arbitrary Python objects.
+# These checkpoints are from the trusted MolCRAFT authors, so this is safe.
+torch.load = functools.partial(torch.load, weights_only=False)
 
 # from sklearn.metrics import roc_auc_score
 from torch_geometric.loader import DataLoader
