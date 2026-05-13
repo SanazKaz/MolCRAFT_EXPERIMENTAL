@@ -95,12 +95,64 @@ def get_dataloader_from_pdb(cfg):
     return test_loader
 
 
-def call(protein_fn, ligand_fn, ckpt_path='./checkpoints/last.ckpt',
-         num_samples=10, sample_steps=100, sample_num_atoms='prior', 
-         beta1=1.5, sigma1_coord=0.03, sampling_strategy='end_back', seed=1234):
-    
-    cfg = Config('./checkpoints/config.yaml')
-    seed_everything(cfg.seed)
+def call(protein_fn, ligand_fn, ckpt_path='../MolJO/pre-trained/backbone_molcraft.ckpt',
+         num_samples=100, sample_steps=200, sample_num_atoms='prior',
+         beta1=1.5, sigma1_coord=0.03, sampling_strategy='end_back_pmf', seed=1234):
+
+    # Try to load the config saved alongside the checkpoint first,
+    # then fall back to the repo default.
+    import os
+    ckpt_dir = os.path.dirname(os.path.abspath(ckpt_path))
+    saved_cfg = os.path.join(ckpt_dir, 'config.yaml')
+    config_file = saved_cfg if os.path.exists(saved_cfg) else os.path.join(
+        os.path.dirname(__file__), 'configs/default.yaml'
+    )
+    print(f"[Config] Loading from {config_file}")
+
+    # All !SUB ${var} placeholders in default.yaml must be resolved here.
+    cfg = Config(config_file,
+                 exp_name='baseline_sample',
+                 revision='default',
+                 debug=False,
+                 no_wandb=True,
+                 wandb_resume_id=None,
+                 logging_level='warning',
+                 seed=seed,
+                 test_only=True,
+                 empty_folder=False,
+                 random_rot=False,
+                 pos_noise_std=0,
+                 pos_normalizer=1.0,
+                 batch_size=4,
+                 epochs=1,
+                 resume=False,
+                 v_loss_weight=1,
+                 lr=5e-4,
+                 scheduler='plateau',
+                 weight_decay=0,
+                 max_grad_norm='Q',
+                 sigma1_coord=sigma1_coord,
+                 beta1=beta1,
+                 t_min=0.0001,
+                 use_discrete_t=True,
+                 discrete_steps=1000,
+                 destination_prediction=True,
+                 sampling_strategy=sampling_strategy,
+                 time_emb_mode='simple',
+                 time_emb_dim=0,
+                 pos_init_mode='zero',
+                 num_samples=num_samples,
+                 sample_steps=sample_steps,
+                 sample_num_atoms=sample_num_atoms,
+                 visual_chain=False,
+                 protein_path=protein_fn,
+                 ligand_path=ligand_fn,
+                 last_ckpt=False,
+                 docking_mode='vina_score',
+                 save_traj=False,
+                 ckpt_path=ckpt_path,
+                 )
+    seed_everything(seed)
     
     cfg.evaluation.protein_path = protein_fn
     cfg.evaluation.ligand_path = ligand_fn
