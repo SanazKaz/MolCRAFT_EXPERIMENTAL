@@ -276,14 +276,28 @@ def prepare_caii(
             )
             pocket_path = _pocket_around_metal(pdb_path, "ZN", pocket_cutoff, pocket_path)
 
-    # Pocket centroid
-    pocket_atoms = parse_pocket_protein_atoms(pocket_path)
-    centroid = compute_pocket_centroid(pocket_atoms)
-    print(f"  CA-II pocket centroid: {centroid.tolist()}")
-
-    # Zinc position (from the full PDB)
+    # Zinc position (from the full PDB) — needed before centroid calculation
     zinc_positions = parse_metal_from_pdb(pdb_path, element="ZN")
     zinc_crystal = zinc_positions[0]   # take first Zn
+
+    # Pocket centroid: use only protein atoms within 8 Å of the zinc so the
+    # centroid stays near the active site.  CA-II inhibitors coordinate directly
+    # to the zinc, so the centroid must be close to it for model-space guidance
+    # to produce non-zero gradients.
+    pocket_atoms = parse_pocket_protein_atoms(pocket_path)
+    dists_to_zinc = np.linalg.norm(pocket_atoms - zinc_crystal, axis=1)
+    near_zinc = pocket_atoms[dists_to_zinc <= 8.0]
+    if len(near_zinc) < 5:
+        # Fallback: widen to 12 Å if too few atoms near zinc
+        near_zinc = pocket_atoms[dists_to_zinc <= 12.0]
+    if len(near_zinc) == 0:
+        near_zinc = pocket_atoms  # last resort: use all pocket atoms
+    centroid = compute_pocket_centroid(near_zinc)
+
+    zinc_dist_from_centroid = float(np.linalg.norm(zinc_crystal - centroid))
+    print(f"  CA-II pocket centroid (zinc-anchored): {centroid.tolist()}")
+    print(f"  Zinc–centroid distance: {zinc_dist_from_centroid:.2f} Å  (should be <8 Å)")
+
     zinc_model = transform_to_model_space(
         zinc_crystal.reshape(1, 3), centroid, pos_normalizer
     )[0]
