@@ -1,26 +1,19 @@
 name: moljo-water-guidance
 channels:
-  - pyg
   - conda-forge
-  - rdkit
   - pytorch
+  - rdkit
   - defaults
 
 dependencies:
   - python=3.9
 
-  # PyTorch — CUDA build must match your driver; change cu116 → cu117/cu118 if needed
+  # PyTorch — pick the cudatoolkit that matches your driver
+  - pytorch::pytorch
+  - pytorch::pytorch-mutex=1.0=cuda
+  - pytorch::torchaudio
+  - pytorch::torchvision
   - cudatoolkit
-  - pytorch::pytorch>=1.12          # pinned: PyG packages below are built against 1.12
-  - pytorch-mutex=1.0=cuda
-  - torchaudio
-  - torchvision
-
-  # PyG — build strings encode the exact torch+cuda version; mamba resolves these
-  - pyg::pyg
-  - pyg::pytorch-scatter            # scatter_max used in WaterPharmacophoreGuidance
-  - pyg::pytorch-cluster
-  - pyg::pytorch-sparse
 
   # Chemistry
   - rdkit
@@ -50,6 +43,19 @@ dependencies:
 
   - pip
   - pip:
+    # PyG — installed via pip so the wheel matches the installed torch version exactly
+    # mamba/conda installs the wrong ABI if done via the pyg channel
+    - torch-scatter
+    - torch-sparse
+    - torch-cluster
+    - torch-geometric
+    # Note: after env creation run this to get the right wheels:
+    #   TORCH=$(python -c "import torch; print(torch.__version__)")
+    #   CUDA=$(python -c "import torch; v=torch.version.cuda; print('cu'+''.join(v.split('.')))")
+    #   pip install torch-scatter torch-sparse torch-cluster torch-geometric \
+    #       -f https://data.pyg.org/whl/torch-${TORCH}+${CUDA}.html
+
+    # MolJO core
     - pytorch-lightning
     - torchmetrics
     - tensorboardx
