@@ -56,6 +56,7 @@ dependencies:
     #       -f https://data.pyg.org/whl/torch-${TORCH}+${CUDA}.html
 
     # MolJO core
+    - lmdb
     - pytorch-lightning
     - torchmetrics
     - tensorboardx
