@@ -4,15 +4,21 @@ name: molcraft-water
 # Key design decisions:
 #   1. NO pytorch/pyg/nvidia conda channels — all torch packages come from pip
 #      to guarantee a single consistent torch install with no conda/pip shadowing.
-#   2. numpy pinned to 1.26.x — conda-built pandas/scipy are compiled against
+#   2. torch 2.5.1 + cu121: torch_cluster 1.6.3 has a broken ABI against
+#      torch 2.6.0 (missing parseSchemaOrName symbol). 2.5.1+cu121 is the
+#      most widely-tested stable combination with PyG. CUDA 12.1 toolkit runs
+#      fine on any driver >= 525; the V100 with driver 580 handles it easily.
+#   3. numpy pinned to 1.26.x — conda-built pandas/scipy are compiled against
 #      numpy 1.x ABI; numpy 2.x breaks them at import.
-#   3. meeko==0.3.3 — 0.4+ imports rdkit.six which was removed from modern RDKit.
-#   4. PyG cu124 wheels work fine on a cu126 runtime (CUDA backward compat);
-#      they must match the torch *major* version (pt26 here).
+#   4. meeko==0.3.3 — 0.4+ imports rdkit.six which was removed from modern RDKit.
+#   5. IMPORTANT: after env creation, uninstall any user-level (~/.local) torch:
+#        pip uninstall torch torchaudio torchvision -y
+#      so the conda-env torch is the only one Python finds.
 #
 # Usage:
 #   mamba env create -f MolJO/environment_water_guidance.yml
 #   conda activate molcraft-water
+#   pip uninstall torch torchaudio torchvision -y   # remove any ~/.local shadow
 
 channels:
   - conda-forge
@@ -52,23 +58,22 @@ dependencies:
   - pip
   - pip:
     # ----------------------------------------------------------------
-    # PyTorch 2.6.0 + CUDA 12.6
-    # --extra-index-url lets pip find the +cu126 local-version packages
-    # (PyPI only has the CPU builds; the +cu126 tag forces the right one).
+    # PyTorch 2.5.1 + CUDA 12.1
+    # torch_cluster 1.6.3 has a broken symbol against torch 2.6.0;
+    # 2.5.1+cu121 is the proven-stable PyG target.
     # ----------------------------------------------------------------
-    - --extra-index-url https://download.pytorch.org/whl/cu126
-    - torch==2.6.0+cu126
-    - torchaudio==2.6.0+cu126
-    - torchvision==0.21.0+cu126
+    - --extra-index-url https://download.pytorch.org/whl/cu121
+    - torch==2.5.1+cu121
+    - torchaudio==2.5.1+cu121
+    - torchvision==0.20.1+cu121
 
     # ----------------------------------------------------------------
-    # PyG — cu124 wheels compiled for torch 2.6 (pt26).
-    # cu124 .so files link correctly against a cu126 PyTorch runtime.
+    # PyG — must match torch version exactly (pt251)
     # ----------------------------------------------------------------
-    - --find-links https://data.pyg.org/whl/torch-2.6.0+cu124.html
-    - torch-scatter==2.1.2+pt26cu124
-    - torch-sparse==0.6.18+pt26cu124
-    - torch-cluster==1.6.3+pt26cu124
+    - --find-links https://data.pyg.org/whl/torch-2.5.1+cu121.html
+    - torch-scatter==2.1.2+pt251cu121
+    - torch-sparse==0.6.18+pt251cu121
+    - torch-cluster==1.6.3+pt251cu121
     - torch-geometric==2.6.1
 
     # ----------------------------------------------------------------
