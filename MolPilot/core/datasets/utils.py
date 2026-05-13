@@ -184,7 +184,7 @@ class PDBProteinNew(object):
             'element': np.array(self.element, dtype=np.long),
             'molecule_name': self.title,
             'pos': np.array(self.pos, dtype=np.float32),
-            'is_backbone': np.array(self.is_backbone, dtype=np.bool),
+            'is_backbone': np.array(self.is_backbone, dtype=bool),
             'atom_name': self.atom_name,
             'atom_to_aa_type': np.array(self.atom_to_aa_type, dtype=np.long)
         }
@@ -365,7 +365,7 @@ class PDBProtein(object):
             'element': np.array(self.element, dtype=np.long),
             'molecule_name': self.title,
             'pos': np.array(self.pos, dtype=np.float32),
-            'is_backbone': np.array(self.is_backbone, dtype=np.bool),
+            'is_backbone': np.array(self.is_backbone, dtype=bool),
             'atom_name': self.atom_name,
             'atom_to_aa_type': np.array(self.atom_to_aa_type, dtype=np.long)
         }
@@ -479,8 +479,8 @@ def parse_sdf_file(path, add_hydrogen=False, kekulize=False):
         charge.append(atom.GetFormalCharge())
         # valence.append(atom.GetTotalValence())
     center_of_mass = accum_pos / accum_mass
-    element = np.array(element, dtype=np.int)
-    charge = np.array(charge, dtype=np.int)
+    element = np.array(element, dtype=int)
+    charge = np.array(charge, dtype=int)
     # valence = np.array(valence, dtype=np.int)
 
     # in edge_type, we have 1 for single bond, 2 for double bond, 3 for triple bond, and 4 for aromatic bond.

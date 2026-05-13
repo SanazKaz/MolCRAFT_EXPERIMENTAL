@@ -76,7 +76,7 @@ def parse_sdf_file_text(path):
 
     center_of_mass = np.array(accum_pos / accum_mass, dtype=np.float32)
 
-    element = np.array(element, dtype=np.int)
+    element = np.array(element, dtype=int)
     pos = np.array(pos, dtype=np.float32)
     BOND_TYPES = {t: i for i, t in enumerate(BondType.names.values())}
     bond_type_map = {
@@ -185,7 +185,7 @@ def parse_sdf_file_mol(path, heavy_only=True, mol=None):
         accum_pos += np.array([x, y, z]) * atomic_weight
         accum_mass += atomic_weight
     center_of_mass = np.array(accum_pos / accum_mass, dtype=np.float32)
-    element = np.array(element, dtype=np.int)
+    element = np.array(element, dtype=int)
     pos = np.array(pos, dtype=np.float32)
 
     row, col, edge_type = [], [], []

@@ -153,7 +153,7 @@ class PDBProtein(object):
             'element': np.array(self.element, dtype=np.long),
             'molecule_name': self.title,
             'pos': np.array(self.pos, dtype=np.float32),
-            'is_backbone': np.array(self.is_backbone, dtype=np.bool),
+            'is_backbone': np.array(self.is_backbone, dtype=bool),
             'atom_name': self.atom_name,
             'atom_to_aa_type': np.array(self.atom_to_aa_type, dtype=np.long)
         }
@@ -258,7 +258,7 @@ def parse_sdf_file(path):
         accum_pos += pos[atom_idx] * atom_weight
         accum_mass += atom_weight
     center_of_mass = accum_pos / accum_mass
-    element = np.array(element, dtype=np.int)
+    element = np.array(element, dtype=int)
 
     # in edge_type, we have 1 for single bond, 2 for double bond, 3 for triple bond, and 4 for aromatic bond.
     row, col, edge_type = [], [], []
